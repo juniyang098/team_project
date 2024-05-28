@@ -37,7 +37,7 @@ class LOAD_CSV:
                     print(f"Reading file: {filepath}")
 
                     try:
-                        # CSV 파일을 데이터프레임으로 읽기
+                        # CSV 파일을 데이터프레임으로 읽기.
                         df = pd.read_csv(filepath, encoding="cp949", skiprows=15)
                         print(f"File {filename} read into dataframe")
 
