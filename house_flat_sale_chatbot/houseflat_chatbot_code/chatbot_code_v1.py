@@ -5,7 +5,7 @@ import re
 app = Flask(__name__)
 
 
-# 데이터베이스 연결
+# 데이터베이스 연결.
 def get_connection():
     return pymysql.connect(
         host="127.0.0.1",
