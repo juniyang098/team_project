@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Looking for a House or a Flat?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1e7e34; /* 어두운 녹색 */
+            font-size: 22px;
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .chat-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            position: relative; /* 자식 요소의 위치 설정을 위해 추가 */
+            padding: 10px;
+            border-radius: 10px;
+        }
+        /* 사용자 메시지 말풍선 스타일 */
+        .user-message {
+            align-self: flex-end; /* 오른쪽 정렬 */
+            margin-left: auto; /* 왼쪽 마진을 자동으로 지정하여 오른쪽 테두리에 붙임 */
+            background-color: #007bff; /* 파란색 배경 */
+            color: #fff; /* 흰색 글자 */
+            border-radius: 10px 10px 0px 10px; /* 둥근 모서리, 오른쪽 아래 모서리 빼기 */
+        }
+
+        /* 사용자 메시지 말풍선의 직각 삼각형 스타일 */
+        .user-message::after {
+            content: "";
+            position: absolute;
+            bottom: 0px;
+            right: -10px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #007bff;
+            border-top: 6px solid transparent;
+            border-bottom: 0 solid transparent;
+        }
+
+        /* Bot 메시지 말풍선 스타일 */
+        .bot-message {
+            align-self: flex-start; /* 왼쪽 정렬 */
+            background-color: #1e7e34; /* 녹색 배경 */
+            color: #fff; /* 흰색 글자 */
+            border-radius: 10px 10px 10px 0px; /* 둥근 모서리, 왼쪽 아래 모서리 빼기 */
+            position: relative; /* 자식 요소의 위치 설정을 위해 추가 */
+        }
+
+        /* Bot 메시지 말풍선의 직각 삼각형 스타일 */
+        .bot-message::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: -10px;
+            width: 0;
+            height: 0;
+            border-right: 10px solid #1e7e34;
+            border-top: 6px solid transparent;
+            border-bottom: 0 solid transparent;
+            z-index: 1; /* 부모 요소보다 앞으로 배치 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Looking for a House or a Flat?</h1>
+        <form id="chat-form">
+            <input type="text" id="user-message" placeholder="메시지를 입력하세요.">
+            <button type="submit">Send</button>
+        </form>
+        <div class="chat-container" id="chat-container"></div>
+    </div>
+
+    <script>
+        document.getElementById("chat-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var userMessage = document.getElementById("user-message").value;
+            document.getElementById("user-message").value = "";
+            appendUserMessage(userMessage); // 사용자 입력 값을 화면에 표시
+
+            // fetch 함수로 데이터 받아오기
+            fetch("/get_response", {
+                method: "POST",
+                body: new URLSearchParams({
+                    "user_message": userMessage
+                }),
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    data.forEach(transaction => {
+                        appendBotMessage("거래금액: " + transaction.거래금액);
+                    });
+                } else {
+                    appendBotMessage("해당하는 거래 데이터가 없습니다.");
+                }
+            });
+        });
+
+        // 사용자 입력 값을 화면에 표시하는 함수
+        function appendUserMessage(message) {
+            var chatContainer = document.getElementById("chat-container");
+            var messageElement = document.createElement("div");
+            messageElement.textContent = message;
+            messageElement.classList.add("chat-message", "user-message");
+
+            // 메시지 길이에 따라 폭 조절
+            var lengthFactor = message.length * 8; // 메시지 길이에 비례한 폭 계산
+            messageElement.style.width = lengthFactor + "px";
+
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 봇 응답 메시지를 화면에 표시하는 함수
+        function appendBotMessage(message) {
+            var chatContainer = document.getElementById("chat-container");
+            var messageElement = document.createElement("div");
+            messageElement.textContent = message;
+            messageElement.classList.add("chat-message", "bot-message");
+
+            // 메시지 길이에 따라 폭 조절
+            var lengthFactor = message.length * 8; // 메시지 길이에 비례한 폭 계산
+            messageElement.style.width = lengthFactor + "px";
+
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
